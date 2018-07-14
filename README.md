@@ -1,45 +1,71 @@
-# polybar-spotify
+# polybar-spotify (forked from [polybar-spotify](https://github.com/Jvanrhijn/polybar-spotify))
+This module provides some basic interactivity on top of [the original polybar-spotify](https://github.com/Jvanrhijn/polybar-spotify).
 
-This is a module that shows the current song playing and its primary artist on Spotify, with a Spotify-green underline, for people that don't want to set up mpd. If Spotify is not active, nothing is shown. If the song name is longer than `trunclen` characers (default 25), it is truncated and `...` is appended. If the song is truncated and contains a single opening parenthesis, the closing paranethsis is appended as well.
+[![paused](https://i.imgur.com/Wx4vHPr.png)](https://i.imgur.com/Wx4vHPr.png)
 
-### Dependencies
+[![playing](https://i.imgur.com/wb8ASGo.png)](https://i.imgur.com/wb8ASGo.png)
+
+Specifically it adds:
+- Play/Pause button
+- Next song
+- Previous song
+
+## Dependencies
 - Python (2.x or 3.x)
 - Python `dbus` module
 
-[![sample screenshot](https://i.imgur.com/kEluTSq.png)](https://i.imgur.com/kEluTSq.png)
-
-### Settings
+## Settings
+Add the parts you'd like. The screenshot above has all of these included.
+#### Things to note
+- Make sure the paths to the scripts are correct. In my case I put the scripts inside my home directory.
+- Change the formatting, icons, padding, underline, intervals, ... to your needs.
+- `scripts/spotify/spotify_status.py` returns the play/pause icons
+### Currently playing
 ~~~ ini
 [module/spotify]
 type = custom/script
-interval = 1
-format-prefix = " "
-format = <label>
-exec = python /path/to/spotify/script
+interval = 3
+format = "%{T1}<label>"
+format-padding = 10
+exec = python3 ~/scripts/spotify/spotify_status.py
 format-underline = #1db954
+line-size = 1
 ~~~
-
-#### Custom arguments
-
-##### Truncate
-
-The argument "-t" is optional and sets the `trunlen`. It specifies the maximum length of the song name, so that it gets truncated when the specified length is exceeded. Defaults to 25.
-
-Override example:
-
+### Play and pause button
 ~~~ ini
-exec = python /path/to/spotify/script -t 42
+[module/playpause]
+type = custom/script
+interval = 2
+format = "%{T3}<label>"
+exec = ~/scripts/spotify/isplaying.sh
+format-underline = #1db954
+line-size = 1
+click-left = "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause"
 ~~~
-
-##### Format
-
-The argument "-f" is optional and sets the format. You can specify how to display the song and the artist's name. Useful if you want to swap the positions.
-
-Override example:
-
+### Previous song
 ~~~ ini
-exec = python /path/to/spotify/script -f '{song} - {artist}'
+[module/previous]
+type = custom/script
+interval = 86400
+format = "%{T3}<label>"
+exec = echo "        "
+format-underline = #1db954
+line-size = 1
+click-left = "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous"
 ~~~
-
-This would output "Lone Digger - Caravan Palace" in your polybar, instead of what is shown in the screenshot.
-
+### Next song
+~~~ ini
+[module/next]
+type = custom/script
+interval = 86400
+format = "%{T3}<label>"
+exec = echo "        "
+format-underline = #1db954
+line-size = 1
+click-left = "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next"
+~~~
+## Adding all modules
+Add all of the desired modules to any bar
+~~~ ini
+modules-right = spotify previous playpause next
+~~~
